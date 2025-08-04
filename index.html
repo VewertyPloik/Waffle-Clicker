@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Waffle Clicker</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Arial Black', sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background: #fff8f0;
+      color: #333;
+      text-align: center;
+      user-select: none;
+    }
+    h1 {
+      font-size: 2.5em;
+      color: #d2691e;
+      margin-top: 20px;
+    }
+    .money {
+      font-size: 1.5em;
+      margin: 10px 0;
+    }
+    .waffle-btn {
+      font-size: 60px;
+      line-height: 70px;
+      width: 70px;
+      height: 70px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      margin: 50px auto 20px auto;
+      display: block;
+      user-select: none;
+      transition: transform 0.1s ease;
+    }
+    .waffle-btn:active {
+      transform: scale(0.9);
+    }
+    .shop {
+      margin: 40px auto;
+      max-width: 400px;
+    }
+    .upgrade {
+      background: #ffe4b5;
+      border: 2px solid #d2691e;
+      margin: 10px;
+      padding: 10px;
+      border-radius: 12px;
+      font-size: 1em;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.2s ease;
+    }
+    .upgrade:hover {
+      background: #ffd699;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧇 Waffle Clicker</h1>
+  <div class="money">$<span id="money">0</span></div>
+  <button class="waffle-btn" onclick="clickWaffle()">🧇</button>
+
+  <div class="shop">
+    <div class="upgrade" onclick="buyDoubleDollars()">
+      🧇 Double Dollars Lv. <span id="doubleLevel">1</span> ($<span id="doubleCost">100</span>) 🧇
+    </div>
+    <div class="upgrade" onclick="buyAutoClick()">
+      Auto Clicker Lv. <span id="autoLevel">0</span> ($<span id="autoCost">50</span>)
+    </div>
+    <div class="upgrade" onclick="buyMoreWaffles()">
+      Buy More Waffles Lv. <span id="waffleLevel">1</span>/50 ($<span id="waffleCost">1000</span>)
+    </div>
+    <div class="upgrade" onclick="buyWaffleShop()">
+      Buy Waffle Shop (5x Money!) ($<span id="shopCost">100000</span>)
+    </div>
+  </div>
+
+  <script>
+    // Variables
+    let money = 0;
+    let clickValue = 1;
+    let doubleCost = 100;
+    let doubleLevel = 1;
+    let autoClick = 0;
+    let autoCost = 50;
+    let waffleLevel = 1;
+    let waffleCost = 1000;
+    let shopCost = 100000;
+    let hasShop = false;
+
+    // Save game state to localStorage
+    function saveGame() {
+      const gameState = {
+        money,
+        clickValue,
+        doubleCost,
+        doubleLevel,
+        autoClick,
+        autoCost,
+        waffleLevel,
+        waffleCost,
+        shopCost,
+        hasShop
+      };
+      localStorage.setItem('waffleClickerSave', JSON.stringify(gameState));
+    }
+
+    // Load game state from localStorage
+    function loadGame() {
+      const saved = localStorage.getItem('waffleClickerSave');
+      if (saved) {
+        const gameState = JSON.parse(saved);
+        money = gameState.money ?? 0;
+        clickValue = gameState.clickValue ?? 1;
+        doubleCost = gameState.doubleCost ?? 100;
+        doubleLevel = gameState.doubleLevel ?? 1;
+        autoClick = gameState.autoClick ?? 0;
+        autoCost = gameState.autoCost ?? 50;
+        waffleLevel = gameState.waffleLevel ?? 1;
+        waffleCost = gameState.waffleCost ?? 1000;
+        shopCost = gameState.shopCost ?? 100000;
+        hasShop = gameState.hasShop ?? false;
+      }
+    }
+
+    // Update UI
+    function updateUI() {
+      document.getElementById("money").innerText = Math.floor(money);
+      document.getElementById("doubleCost").innerText = doubleCost;
+      document.getElementById("doubleLevel").innerText = doubleLevel;
+      document.getElementById("autoLevel").innerText = autoClick;
+      document.getElementById("autoCost").innerText = autoCost;
+      document.getElementById("waffleLevel").innerText = waffleLevel;
+      document.getElementById("waffleCost").innerText = waffleCost;
+      document.getElementById("shopCost").innerText = shopCost;
+      saveGame();
+    }
+
+    // Click waffle
+    function clickWaffle() {
+      let gain = clickValue * waffleLevel * (hasShop ? 5 : 1);
+      money += gain;
+      showGain("+" + gain + "$");
+      updateUI();
+    }
+
+    // Buy Double Dollars
+    function buyDoubleDollars() {
+      if (money >= doubleCost) {
+        money -= doubleCost;
+        clickValue *= 2;
+        doubleLevel++;
+        doubleCost = Math.floor(doubleCost * 2.5);
+        updateUI();
+      }
+    }
+
+    // Buy Auto Click
+    function buyAutoClick() {
+      if (money >= autoCost) {
+        money -= autoCost;
+        autoClick++;
+        autoCost = Math.floor(autoCost * 1.8);
+        updateUI();
+      }
+    }
+
+    // Buy More Waffles
+    function buyMoreWaffles() {
+      if (money >= waffleCost && waffleLevel < 50) {
+        money -= waffleCost;
+        waffleLevel++;
+        waffleCost = Math.floor(waffleCost * 1.6);
+        updateUI();
+      }
+    }
+
+    // Buy Waffle Shop
+    function buyWaffleShop() {
+      if (!hasShop && money >= shopCost) {
+        money -= shopCost;
+        hasShop = true;
+        updateUI();
+      }
+    }
+
+    // Auto gain every second
+    setInterval(() => {
+      let gain = autoClick * waffleLevel * (hasShop ? 5 : 1);
+      money += gain;
+      if (gain > 0) showGain("+" + gain + "$");
+      updateUI();
+    }, 1000);
+
+    // Show +xxx$ text briefly above waffle when clicked or auto earned
+    function showGain(text) {
+      const gainElem = document.createElement("div");
+      gainElem.textContent = text;
+      gainElem.style.position = "fixed";
+      gainElem.style.left = "50%";
+      gainElem.style.top = "40%";
+      gainElem.style.transform = "translateX(-50%)";
+      gainElem.style.color = "#d2691e";
+      gainElem.style.fontWeight = "bold";
+      gainElem.style.fontSize = "1.2em";
+      gainElem.style.userSelect = "none";
+      gainElem.style.opacity = "1";
+      gainElem.style.transition = "opacity 1s ease, top 1s ease";
+      document.body.appendChild(gainElem);
+      setTimeout(() => {
+        gainElem.style.top = "30%";
+        gainElem.style.opacity = "0";
+      }, 100);
+      setTimeout(() => {
+        gainElem.remove();
+      }, 1100);
+    }
+
+    // Load saved game on startup
+    loadGame();
+    updateUI();
+  </script>
+</body>
+</html>
